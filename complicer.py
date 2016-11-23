@@ -10,6 +10,8 @@ TYPE_SY_RBRACE = 'RBRACE'
 TYPE_SY_SEMI = 'SEMI'
 TYPE_SY_EOF = 'EOF'
 
+TYPE_KW_DEF = 'def'
+
 
 class Token:
     def __init__(self, type, value):
@@ -21,6 +23,7 @@ class Token:
             type=self.type,
             value=repr(self.value)
         )
+
 
 class Lexer:
     def __init__(self, text):
@@ -70,6 +73,8 @@ class Lexer:
         while self.current_char is not None and self.current_char.isalpha():
             result += self.current_char
             self.advance()
+        if result == TYPE_KW_DEF:
+            return Token(TYPE_KW_DEF, TYPE_KW_DEF)
         return Token(TYPE_ID, result)
 
     def error(self):
@@ -85,9 +90,90 @@ class Lexer:
         return Token(TYPE_CONST_STRING, result)
 
 
+class AST:
+    def __repr__(self):
+        return repr(self.__dict__)
 
 
-def main():
+class Program(AST):
+    def __init__(self, functions):
+        self.functions = functions
+
+
+class Function(AST):
+    def __init__(self, name, block):
+        self.name = name
+        self.block = block
+
+
+class Block(AST):
+    def __init__(self, statements):
+        self.statements = statements
+
+
+class Statement(AST):
+    def __init__(self, operation, args):
+        self.operation = operation
+        self.args = args
+
+
+class Call(AST):
+    def __init__(self, fun, args):
+        self.fun = fun
+        self.args = args
+
+
+class Parser:
+    def __init__(self, lexer):
+        self.lexer = lexer
+        self.current_token = self.lexer.get_next_token()
+
+    def eat(self, type):
+        if self.current_token.type is not type:
+            self.error()
+        else:
+            self.current_token = self.lexer.get_next_token()
+
+    def error(self):
+        raise Exception('Invalid syntax')
+
+    def program(self):
+        functions = []
+        while self.current_token.type != TYPE_SY_EOF:
+            functions.append(self.function())
+        return Program(functions)
+
+    def function(self):
+        self.eat(TYPE_KW_DEF)
+        name = self.current_token.value
+        self.eat(TYPE_ID)
+        self.eat(TYPE_SY_LPAREN)
+        self.eat(TYPE_SY_RPAREN)
+        block = self.block()
+        return Function(name, block)
+
+    def block(self):
+        self.eat(TYPE_SY_LBRACE)
+        statements = []
+        while self.current_token.type != TYPE_SY_RBRACE:
+            statements.append(self.statement())
+        self.eat(TYPE_SY_RBRACE)
+        return Block(statements)
+
+    def statement(self):
+        name = self.current_token.value
+        self.eat(TYPE_ID)
+        self.eat(TYPE_SY_LPAREN)
+        args = []
+        if self.current_token.type != TYPE_SY_RPAREN:
+            args.append(self.current_token)
+            self.current_token = self.lexer.get_next_token()
+        self.eat(TYPE_SY_RPAREN)
+        self.eat(TYPE_SY_SEMI)
+        return Call(name, args)
+
+
+def lexer_test():
     text = open(FILE_EXAMPLE, 'r').read()
     lexer = Lexer(text)
     token = lexer.get_next_token()
@@ -95,5 +181,14 @@ def main():
         print(token)
         token = lexer.get_next_token()
 
+
+def parser_test():
+    text = open(FILE_EXAMPLE, 'r').read()
+    lexer = Lexer(text)
+    parser = Parser(lexer)
+    program = parser.program()
+    print(program)
+
+
 if __name__ == '__main__':
-    main()
+    parser_test()
