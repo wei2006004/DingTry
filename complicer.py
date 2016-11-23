@@ -96,7 +96,8 @@ class AST:
 
 
 class Program(AST):
-    def __init__(self, functions):
+    def __init__(self, name, functions):
+        self.name = name
         self.functions = functions
 
 
@@ -137,11 +138,11 @@ class Parser:
     def error(self):
         raise Exception('Invalid syntax')
 
-    def program(self):
+    def program(self, name):
         functions = []
         while self.current_token.type != TYPE_SY_EOF:
             functions.append(self.function())
-        return Program(functions)
+        return Program(name, functions)
 
     def function(self):
         self.eat(TYPE_KW_DEF)
@@ -173,6 +174,30 @@ class Parser:
         return Call(name, args)
 
 
+class Generator:
+    def __init__(self, program):
+        self.program = program
+
+    def generate(self):
+        result = ''
+        result += 'public class ' + self.program.name + ' {\n\n'
+        for fun in self.program.functions:
+            result += '\tpublic static void ' + fun.name + '() {\n'
+            for call in fun.block.statements:
+                result += self.generate_statement(call)
+            result += '\t}\n\n'
+        result += '}'
+        return result
+
+    def generate_statement(self, call):
+        result = ''
+        result += '\t\t' + call.fun + '('
+        if call.args:
+            result += '"' + call.args[0].value + '"'
+        result += ');\n'
+        return result
+
+
 def lexer_test():
     text = open(FILE_EXAMPLE, 'r').read()
     lexer = Lexer(text)
@@ -186,9 +211,18 @@ def parser_test():
     text = open(FILE_EXAMPLE, 'r').read()
     lexer = Lexer(text)
     parser = Parser(lexer)
-    program = parser.program()
-    print(program)
+    program = parser.program('example')
+    print(repr(program))
+
+
+def generate_test():
+    text = open(FILE_EXAMPLE, 'r').read()
+    lexer = Lexer(text)
+    parser = Parser(lexer)
+    program = parser.program('example')
+    generator = Generator(program)
+    print(generator.generate())
 
 
 if __name__ == '__main__':
-    parser_test()
+    generate_test()
