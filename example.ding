@@ -1,0 +1,8 @@
+def fun() {
+    println("fun");
+}
+
+def main() {
+    fun();
+    println("main");
+}
