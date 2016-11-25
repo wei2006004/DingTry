@@ -1,4 +1,4 @@
-from _token import *
+from _global import SY_EOF
 from _lexer import Lexer
 from _parser import Parser
 from _generator import Generator
@@ -10,7 +10,7 @@ def lexer_test():
     text = open(FILE_EXAMPLE, 'r').read()
     lexer = Lexer(text)
     token = lexer.get_next_token()
-    while token.type is not TYPE_SY_EOF:
+    while token.type is not SY_EOF:
         print(token)
         token = lexer.get_next_token()
 

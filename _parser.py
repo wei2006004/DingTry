@@ -1,9 +1,9 @@
-from _token import *
+from _global import *
 
 
 class AST:
     def __repr__(self):
-        return repr(self.__dict__)
+        return '\n' + str(self.__class__) + '\n' + repr(self.__dict__)
 
 
 class Program(AST):
@@ -13,8 +13,9 @@ class Program(AST):
 
 
 class Function(AST):
-    def __init__(self, name, block):
+    def __init__(self, name, arglist, block):
         self.name = name
+        self.arglist = arglist
         self.block = block
 
 
@@ -40,8 +41,20 @@ class Parser:
         self.lexer = lexer
         self.current_token = self.lexer.get_next_token()
 
-    def eat(self, type):
-        if self.current_token.type is not type:
+    def eat(self, value):
+        if self.current_token.value is not value:
+            self.error()
+        else:
+            self.current_token = self.lexer.get_next_token()
+
+    def eat_id(self):
+        if self.current_token.type is not TYPE_ID:
+            self.error()
+        else:
+            self.current_token = self.lexer.get_next_token()
+
+    def eat_bt(self):
+        if self.current_token.type is not TYPE_BUILDIN_TYPE:
             self.error()
         else:
             self.current_token = self.lexer.get_next_token()
@@ -51,35 +64,65 @@ class Parser:
 
     def program(self, name):
         functions = []
-        while self.current_token.type != TYPE_SY_EOF:
+        while self.current_token.value != SY_EOF:
             functions.append(self.function())
         return Program(name, functions)
 
     def function(self):
-        self.eat(TYPE_KW_DEF)
+        self.eat(KW_DEF)
         name = self.current_token.value
-        self.eat(TYPE_ID)
-        self.eat(TYPE_SY_LPAREN)
-        self.eat(TYPE_SY_RPAREN)
+        self.eat_id()
+        self.eat(SY_LPAREN)
+        if self.current_token.value != SY_RPAREN:
+            arglist = self.arglist()
+        else:
+            arglist = None
+        self.eat(SY_RPAREN)
         block = self.block()
-        return Function(name, block)
+        return Function(name, arglist, block)
 
     def block(self):
-        self.eat(TYPE_SY_LBRACE)
+        self.eat(SY_LBRACE)
         statements = []
-        while self.current_token.type != TYPE_SY_RBRACE:
+        while self.current_token.value != SY_RBRACE:
             statements.append(self.statement())
-        self.eat(TYPE_SY_RBRACE)
+        self.eat(SY_RBRACE)
         return Block(statements)
 
     def statement(self):
         name = self.current_token.value
-        self.eat(TYPE_ID)
-        self.eat(TYPE_SY_LPAREN)
+        self.eat_id()
+        self.eat(SY_LPAREN)
         args = []
-        if self.current_token.type != TYPE_SY_RPAREN:
+        if self.current_token.value != SY_RPAREN:
             args.append(self.current_token)
             self.current_token = self.lexer.get_next_token()
-        self.eat(TYPE_SY_RPAREN)
-        self.eat(TYPE_SY_SEMI)
+        self.eat(SY_RPAREN)
+        self.eat(SY_SEMI)
         return Call(name, args)
+
+    def arglist(self):
+        ret = []
+        type = self.current_token.value
+        self.eat_bt()
+        name = self.current_token.value
+        self.eat_id()
+        while self.current_token.value != SY_RPAREN:
+            ret.append((type, name))
+            self.eat(SY_COMMA)
+            type = self.current_token.value
+            self.eat_bt()
+            name = self.current_token.value
+            self.eat_id()
+        ret.append((type, name))
+        return ret
+
+
+if __name__ == '__main__':
+    text = open('example.ding', 'r').read()
+    from _lexer import Lexer
+
+    lexer = Lexer(text)
+    parser = Parser(lexer)
+    program = parser.program('example')
+    print(repr(program))

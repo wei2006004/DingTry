@@ -1,8 +1,8 @@
-def fun() {
+def fun(string text, int a) {
     println("fun");
 }
 
-def main() {
+def main(string args) {
     fun();
     println("main");
 }
