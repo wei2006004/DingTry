@@ -12,18 +12,17 @@ class Parser:
         self.current_token = self.lexer.get_next_token()
 
     def eat(self, value=None, type=None):
-        if value is None:
-            self.current_token = self.lexer.get_next_token()
-        elif self.current_token.value is not value:
+        if value and self.current_token.value is not value:
             self.error()
-        else:
-            if type and self.current_token.value is not type:
-                self.error()
-            else:
-                self.current_token = self.lexer.get_next_token()
+        if type and self.current_token.type is not type:
+            self.error()
+        self.current_token = self.lexer.get_next_token()
 
     def eat_id(self, id=None):
         self.eat(value=id, type=TYPE_ID)
+
+    def eat_sy(self, symbol=None):
+        self.eat(value=symbol, type=TYPE_SYMBOL)
 
     def eat_bt(self, type=None):
         self.eat(value=type, type=TYPE_BUILDIN_TYPE)
@@ -31,5 +30,8 @@ class Parser:
     def eat_kw(self, key=None):
         self.eat(value=key, type=TYPE_KEYWORD)
 
-    def error(self):
-        raise Exception('Invalid syntax')
+    def error(self, msg=None):
+        text = 'Invalid syntax'
+        if msg:
+            text += ': ' + msg
+        raise Exception(text)

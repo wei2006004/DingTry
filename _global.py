@@ -49,9 +49,14 @@ SY_DIV = '/'
 SY_MOD = '%'
 SY_LESS = '<'
 SY_GREATER = '>'
+SY_AND = '&'
+SY_OR = '|'
+SY_XOR = '^'
 
-SY_SINGLE_LIST = [SY_LPAREN, SY_RPAREN, SY_LBRACE, SY_RBRACE, SY_SEMI, SY_COMMA, SY_ASSIGN, SY_MINUS, SY_PLUS, SY_LESS,
-                  SY_GREATER, SY_MUL, SY_DIV, SY_MOD]
+SY_SINGLE_LIST = [SY_LPAREN, SY_RPAREN, SY_LBRACE, SY_RBRACE, SY_SEMI,
+                  SY_COMMA, SY_ASSIGN, SY_MINUS, SY_PLUS, SY_LESS,
+                  SY_GREATER, SY_MUL, SY_DIV, SY_MOD, SY_AND, SY_OR,
+                  SY_XOR]
 
 SY_EQUAL = '=='
 SY_NOT_EQUAL = '!='
@@ -59,9 +64,15 @@ SY_LESS_EQUAL = '<='
 SY_GREATER_EQUAL = '>='
 SY_ACCUM = '+='
 SY_REDUCT = '-='
+SY_LSHIFT = '<<'
+SY_RSHIFT = '>>'
+SY_LOG_AND = '&&'
+SY_LOG_OR = '||'
 
-SY_DOUBLE_HEAD_LIST = ['=', '!', '<', '>', '+', '-']    # 可能为双字符符号的头字符
-SY_DOUBLE_LIST = [SY_EQUAL, SY_NOT_EQUAL, SY_LESS_EQUAL, SY_GREATER_EQUAL, SY_ACCUM, SY_REDUCT]
+SY_DOUBLE_HEAD_LIST = ['=', '!', '<', '>', '+', '-', '&', '|']    # 可能为双字符符号的头字符
+SY_DOUBLE_LIST = [SY_EQUAL, SY_NOT_EQUAL, SY_LESS_EQUAL, SY_GREATER_EQUAL,
+                  SY_ACCUM, SY_REDUCT, SY_LSHIFT, SY_RSHIFT, SY_LOG_AND,
+                  SY_LOG_OR]
 
 SY_EOF = 'EOF'
 SY_MAP = {SY_EOF: SyToken(SY_EOF)}
