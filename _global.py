@@ -1,5 +1,7 @@
 TYPE_ID = 'ID'
 TYPE_CONST_STRING = 'Const String'
+TYPE_CONST_INT = 'Const Int'
+TYPE_CONST_FLOAT = 'Const Float'
 
 TYPE_SYMBOL = 'Symbol'
 TYPE_KEYWORD = 'Keyword'
@@ -39,11 +41,35 @@ SY_LBRACE = '{'
 SY_RBRACE = '}'
 SY_SEMI = ';'
 SY_COMMA = ','
-SY_EOF = 'EOF'
+SY_ASSIGN = '='
+SY_PLUS = '+'
+SY_MINUS = '-'
+SY_MUL = '*'
+SY_DIV = '/'
+SY_MOD = '%'
+SY_LESS = '<'
+SY_GREATER = '>'
 
-SY_LIST = [SY_LPAREN, SY_RPAREN, SY_LBRACE, SY_RBRACE, SY_SEMI, SY_COMMA, SY_EOF]
-SY_MAP = {}
-for sy in SY_LIST:
+SY_SINGLE_LIST = [SY_LPAREN, SY_RPAREN, SY_LBRACE, SY_RBRACE, SY_SEMI, SY_COMMA, SY_ASSIGN, SY_MINUS, SY_PLUS, SY_LESS,
+                  SY_GREATER, SY_MUL, SY_DIV, SY_MOD]
+
+SY_EQUAL = '=='
+SY_NOT_EQUAL = '!='
+SY_LESS_EQUAL = '<='
+SY_GREATER_EQUAL = '>='
+SY_ACCUM = '+='
+SY_REDUCT = '-='
+
+SY_DOUBLE_HEAD_LIST = ['=', '!', '<', '>', '+', '-']    # 可能为双字符符号的头字符
+SY_DOUBLE_LIST = [SY_EQUAL, SY_NOT_EQUAL, SY_LESS_EQUAL, SY_GREATER_EQUAL, SY_ACCUM, SY_REDUCT]
+
+SY_EOF = 'EOF'
+SY_MAP = {SY_EOF: SyToken(SY_EOF)}
+
+for sy in SY_SINGLE_LIST:
+    SY_MAP[sy] = SyToken(sy)
+
+for sy in SY_DOUBLE_LIST:
     SY_MAP[sy] = SyToken(sy)
 
 KW_DEF = 'def'
