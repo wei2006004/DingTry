@@ -52,27 +52,40 @@ SY_GREATER = '>'
 SY_AND = '&'
 SY_OR = '|'
 SY_XOR = '^'
+SY_COLON = ':'
+SY_QUEST = '?'
+SY_NOT = '~'
+SY_LOG_NOT = '!'
 
 SY_SINGLE_LIST = [SY_LPAREN, SY_RPAREN, SY_LBRACE, SY_RBRACE, SY_SEMI,
                   SY_COMMA, SY_ASSIGN, SY_MINUS, SY_PLUS, SY_LESS,
                   SY_GREATER, SY_MUL, SY_DIV, SY_MOD, SY_AND, SY_OR,
-                  SY_XOR]
+                  SY_XOR, SY_COLON, SY_QUEST, SY_NOT, SY_LOG_NOT]
 
 SY_EQUAL = '=='
 SY_NOT_EQUAL = '!='
 SY_LESS_EQUAL = '<='
 SY_GREATER_EQUAL = '>='
-SY_ACCUM = '+='
-SY_REDUCT = '-='
+SY_ADD_ASSIGN = '+='
+SY_MINUS_ASSIGN = '-='
+SY_MUL_ASSIGN = '*='
+SY_DIV_ASSIGN = '/='
+SY_MOD_ASSIGN = '%='
+SY_AND_ASSIGN = '&='
+SY_OR_ASSIGN = '|='
+SY_XOR_ASSIGN = '^='
 SY_LSHIFT = '<<'
 SY_RSHIFT = '>>'
 SY_LOG_AND = '&&'
 SY_LOG_OR = '||'
+SY_INC = '++'
+SY_DEC = '--'
 
 SY_DOUBLE_HEAD_LIST = ['=', '!', '<', '>', '+', '-', '&', '|']    # 可能为双字符符号的头字符
 SY_DOUBLE_LIST = [SY_EQUAL, SY_NOT_EQUAL, SY_LESS_EQUAL, SY_GREATER_EQUAL,
-                  SY_ACCUM, SY_REDUCT, SY_LSHIFT, SY_RSHIFT, SY_LOG_AND,
-                  SY_LOG_OR]
+                  SY_ADD_ASSIGN, SY_MINUS_ASSIGN, SY_LSHIFT, SY_RSHIFT, SY_LOG_AND,
+                  SY_LOG_OR, SY_MUL_ASSIGN, SY_DIV_ASSIGN, SY_MOD_ASSIGN, SY_AND_ASSIGN,
+                  SY_OR_ASSIGN, SY_XOR_ASSIGN, SY_INC, SY_DEC]
 
 SY_EOF = 'EOF'
 SY_MAP = {SY_EOF: SyToken(SY_EOF)}
