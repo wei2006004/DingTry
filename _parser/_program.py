@@ -1,9 +1,4 @@
-from _global import *
-
-
-class AST:
-    def __repr__(self):
-        return '\n' + str(self.__class__) + '\n' + repr(self.__dict__)
+from _parser._expr import *
 
 
 class Program(AST):
@@ -36,32 +31,7 @@ class Call(AST):
         self.args = args
 
 
-class Parser:
-    def __init__(self, lexer):
-        self.lexer = lexer
-        self.current_token = self.lexer.get_next_token()
-
-    def eat(self, value):
-        if self.current_token.value is not value:
-            self.error()
-        else:
-            self.current_token = self.lexer.get_next_token()
-
-    def eat_id(self):
-        if self.current_token.type is not TYPE_ID:
-            self.error()
-        else:
-            self.current_token = self.lexer.get_next_token()
-
-    def eat_bt(self):
-        if self.current_token.type is not TYPE_BUILDIN_TYPE:
-            self.error()
-        else:
-            self.current_token = self.lexer.get_next_token()
-
-    def error(self):
-        raise Exception('Invalid syntax')
-
+class ProgramParser(ExprParser):
     def program(self, name):
         functions = []
         while self.current_token.value != SY_EOF:
@@ -119,10 +89,10 @@ class Parser:
 
 
 if __name__ == '__main__':
-    text = open('example.ding', 'r').read()
+    text = open('../example.ding', 'r').read()
     from _lexer import Lexer
 
     lexer = Lexer(text)
-    parser = Parser(lexer)
+    parser = ProgramParser(lexer)
     program = parser.program('example')
     print(repr(program))
