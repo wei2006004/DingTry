@@ -46,11 +46,51 @@ class TriOp(AST):
         return '(' + self.operation + ': ' + repr(self.left) + ', ' + repr(self.middle) + ', ' + repr(self.right) + ')'
 
 
+class Call(AST):
+    def __init__(self, var, arglist):
+        self.var = var
+        self.arglist = arglist
+
+    def __repr__(self):
+        return repr(self.var) + '(' + ','.join([repr(arg) for arg in self.arglist]) + ')'
+
+
+class Offset(AST):
+    def __init__(self, var, index):
+        self.var = var
+        self.index = index
+
+    def __repr__(self):
+        return repr(self.var) + '[' + repr(self.index) + ']'
+
+
 class ExprParser(Parser):
     def factor(self):
-        value = self.current_token.value
-        self.eat(type=TYPE_CONST_INT)
-        return int(value)
+        if self.current_token.type in [TYPE_CONST_INT, TYPE_CONST_STRING, TYPE_CONST_FLOAT]:
+            token = self.current_token
+            self.eat(type=self.current_token.type)
+            return token.value
+        if self.current_token.value is SY_LPAREN:
+            self.eat_sy(SY_LPAREN)
+            expr = self.expr()
+            self.eat_sy(SY_RPAREN)
+            return expr
+        var = self.variable()
+        if self.current_token.value is SY_LPAREN:
+            self.eat_sy(SY_LPAREN)
+            arglist = []
+            while self.current_token.value is not SY_RPAREN:
+                arglist.append(self.expr())
+                if self.current_token.value is not SY_RPAREN:
+                    self.eat_sy(SY_COMMA)
+            self.eat_sy(SY_RPAREN)
+            return Call(var, arglist)
+        if self.current_token.value is SY_LBRACKET:
+            self.eat_sy(SY_LBRACKET)
+            index = self.expr()
+            self.eat_sy(SY_RBRACKET)
+            return Offset(var, index)
+        self.error('no match factor:' + repr(self.current_token))
 
     def expr(self):
         return self.triop()
@@ -91,13 +131,18 @@ class ExprParser(Parser):
             return UniOp(operation, value)
         return self.factor()
 
+    def variable(self):
+        var = self.current_token.value
+        self.eat_id()
+        return var
+
 
 if __name__ == '__main__':
     print(BINOP_LIST)
     print(UNIOP_LIST)
     from _lexer import Lexer
 
-    expr = '2 + 3 ? 9 / 2 - 5 * 6 | - 1 : 6 && ~ 8 >> 8 ? 0 << 7 > ! ~ ++ 9 <= 5 : 0 & 6'
+    expr = '2+abc[2+4/5]-3 ? c(4|6,9,"as")-"sdc"*6.67|-1 : 6 && (~ 8.5 >> 8 ? 0 << 7 > ! "dsf" | ~ ++ 9 <= 5 : 0 )'
     lexer = Lexer(expr)
     parser = ExprParser(lexer)
     tree = parser.expr()

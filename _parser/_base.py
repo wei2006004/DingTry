@@ -34,4 +34,6 @@ class Parser:
         text = 'Invalid syntax'
         if msg:
             text += ': ' + msg
+        else:
+            text += repr(self.current_token)
         raise Exception(text)
