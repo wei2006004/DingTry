@@ -16,16 +16,13 @@ class Parser:
             self.error()
         if type and self.current_token.type is not type:
             self.error()
-        self.current_token = self.lexer.get_next_token()
+        self.next_token()
 
     def eat_id(self, id=None):
         self.eat(value=id, type=TYPE_ID)
 
     def eat_sy(self, symbol=None):
         self.eat(value=symbol, type=TYPE_SYMBOL)
-
-    def eat_bt(self, type=None):
-        self.eat(value=type, type=TYPE_BUILDIN_TYPE)
 
     def eat_kw(self, key=None):
         self.eat(value=key, type=TYPE_KEYWORD)
@@ -37,3 +34,6 @@ class Parser:
         else:
             text += repr(self.current_token)
         raise Exception(text)
+
+    def next_token(self):
+        self.current_token = self.lexer.get_next_token()

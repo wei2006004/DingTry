@@ -57,8 +57,6 @@ class Lexer:
             self.advance()
         if result in KW_LIST:
             return KW_MAP[result]
-        if result in BT_LIST:
-            return BT_MAP[result]
         return Token(TYPE_ID, result)
 
     def error(self, char):
