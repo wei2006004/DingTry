@@ -25,6 +25,7 @@ class Lexer:
         while self.current_char is not None:
             if self.current_char.isspace():
                 self.skip_whitespace()
+                continue
             if self.current_char.isalpha():
                 return self._id()
             if self.current_char.isdigit():

@@ -11,9 +11,10 @@ CATEGORY_NONE = 0x0
 CATEGORY_SY_UNIOP = 0x01
 CATEGORY_SY_BINOP = 0x02
 CATEGORY_SY_EOF = 0x04
+CATEGORY_SY_ASSIGN = 0x08
 
-CATEGORY_KW_STMT = 0x10
-CATEGORY_KW_BT = 0x20
+CATEGORY_KW_STMT = 0x100
+CATEGORY_KW_BT = 0x200
 
 
 class Token:
@@ -106,6 +107,11 @@ BINOP_LIST = [SY_MUL, SY_DIV, SY_MOD, SY_PLUS, SY_MINUS, SY_LSHIFT, SY_RSHIFT,
 '''单目运算符，从右到左'''
 UNIOP_LIST = [SY_PLUS, SY_MINUS, SY_INC, SY_DEC, SY_NOT, SY_LOG_NOT]
 
+'''赋值运算符'''
+ASSIGN_OP_LIST = [SY_ASSIGN, SY_ADD_ASSIGN, SY_MINUS_ASSIGN, SY_MOD_ASSIGN,
+                  SY_MUL_ASSIGN, SY_ADD_ASSIGN, SY_OR_ASSIGN, SY_XOR_ASSIGN,
+                  SY_DIV_ASSIGN]
+
 
 class SyToken(Token):
     def __init__(self, value, category=CATEGORY_NONE):
@@ -119,6 +125,8 @@ class SyToken(Token):
             self.add_category(CATEGORY_SY_UNIOP)
         if self.value is SY_EOF:
             self.add_category(CATEGORY_SY_EOF)
+        if self.value in ASSIGN_OP_LIST:
+            self.add_category(CATEGORY_SY_ASSIGN)
 
 
 SY_MAP = {SY_EOF: SyToken(SY_EOF)}
