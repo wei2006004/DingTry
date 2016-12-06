@@ -45,6 +45,22 @@ class Block(AST):
     def add_local_var(self, name, clazz):
         self.vars[name] = Variable(name, clazz, self, VAR_TYPE_LOCAL)
 
+    def recur_contains(self, name):
+        block = self
+        while block is not None:
+            if block.contains(name):
+                return True
+            block = block.parent
+        return False
+
+    def recur_get_var(self, name):
+        block = self
+        while block is not None:
+            if block.contains(name):
+                return block.get_var(name)
+            block = block.parent
+        return None
+
     def contains(self, name):
         return name in self.vars.keys()
 
@@ -165,21 +181,21 @@ class StmtParser(ExprParser):
             block.add_local_var(name, type)
             if self.current_token.value == SY_ASSIGN:
                 self.eat_sy(SY_ASSIGN)
-                right = self.expr()
+                right = self.expr(block)
                 self.eat_semi()
                 return Declaration(type, name, right)
             self.eat_semi()
             return Declaration(type, name)
         if self.current_token.match_category(CATEGORY_KW_STMT):
             return self.kw_stmt(block)
-        expr = self.expr()
+        expr = self.expr(block)
         if self.current_token.value is SY_SEMI:
             self.eat_semi()
             return expr
         if self.current_token.match_category(CATEGORY_SY_ASSIGN):
             op = self.current_token.value
             self.eat_sy()
-            right = self.expr()
+            right = self.expr(block)
             self.eat_semi()
             return Stmt(op, expr, right)
 
@@ -193,9 +209,13 @@ class StmtParser(ExprParser):
             return self.while_stmt(block)
         self.error('not support kw: ' + repr(self.current_token))
 
-    def variable(self):
-        # todo 添加定义变量
-        return ExprParser.variable(self)
+    def variable(self, block):
+        name = self.current_token.value
+        self.eat_id()
+        var = block.recur_get_var(name)
+        if var is None:
+            self.error('has no var name:' + name)
+        return var
 
     def is_type(self, token):
         return token.match_category(CATEGORY_KW_BT)
@@ -208,7 +228,7 @@ class StmtParser(ExprParser):
 
     def if_stmt(self, parent):
         self.eat_kw(KW_IF)
-        expr = self.bool_expr()
+        expr = self.bool_expr(parent)
         stmt, block = self.stmt_or_block(parent)
         if self.current_token.value is KW_ELIF:
             other_stmt = self.elif_stmt(parent)
@@ -222,18 +242,18 @@ class StmtParser(ExprParser):
         self.eat_kw(KW_DO)
         stmt, block = self.stmt_or_block(parent)
         self.eat_kw(KW_WHILE)
-        expr = self.bool_expr()
+        expr = self.bool_expr(parent)
         return DO(expr, stmt, block)
 
     def while_stmt(self, parent):
         self.eat_kw(KW_WHILE)
-        expr = self.bool_expr()
+        expr = self.bool_expr(parent)
         stmt, block = self.stmt_or_block(parent)
         return WHILE(expr, stmt, block)
 
     def elif_stmt(self, parent):
         self.eat_kw(KW_ELIF)
-        expr = self.bool_expr()
+        expr = self.bool_expr(parent)
         stmt, block = self.stmt_or_block(parent)
         if self.current_token.value is KW_ELIF:
             other_stmt = self.elif_stmt(parent)
@@ -257,9 +277,9 @@ class StmtParser(ExprParser):
             stmt = self.stmt(parent)
         return stmt, block
 
-    def bool_expr(self):
+    def bool_expr(self, block):
         self.eat_sy(SY_LPAREN)
-        expr = self.expr()
+        expr = self.expr(block)
         self.eat_sy(SY_RPAREN)
         return expr
 
@@ -268,7 +288,7 @@ if __name__ == '__main__':
     from _lexer import Lexer
 
     stmts = ''' {
-    a[3/5] = 10 + 2 / 3 * a;
+    int a = 10 + 2 / 3 ;
     int b = 3;
     float c = 2.6;
     string str = "strre"+"cds";
@@ -281,7 +301,10 @@ if __name__ == '__main__':
     }
     if (3) c = 3.2; else c = 3.6;
     do ++b; while(b > 5)
-    while(b >=0) a[4/7] = 68+928;
+    while(b >=0) {
+        a = 68+928;
+        --b;
+    }
     } '''
     lexer = Lexer(stmts)
     parser = StmtParser(lexer)
