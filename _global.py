@@ -143,6 +143,7 @@ KW_VAR = 'var'
 KW_DO = 'do'
 KW_WHILE = 'while'
 KW_IF = 'if'
+KW_ELIF = 'elif'
 KW_ELSE = 'else'
 KW_FOR = 'for'
 KW_SWITCH = 'switch'
@@ -157,7 +158,7 @@ KW_BOOL = 'bool'
 KW_CHAR = 'char'
 
 '''关键字列表'''
-KW_LIST = [KW_DEF, KW_VAR, KW_DO, KW_WHILE, KW_IF,
+KW_LIST = [KW_DEF, KW_VAR, KW_DO, KW_WHILE, KW_IF, KW_ELIF,
            KW_ELSE, KW_FOR, KW_SWITCH, KW_CASE, KW_RETURN,
            KW_STRING, KW_INT, KW_FLOAT, KW_DOUBLE, KW_BOOL, KW_CHAR]
 KW_BT_LIST = [KW_STRING, KW_INT, KW_FLOAT, KW_DOUBLE, KW_BOOL, KW_CHAR]

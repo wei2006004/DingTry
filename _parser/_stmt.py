@@ -1,12 +1,14 @@
 from _parser._expr import *
 
-ASSIGN_OP_LIST = [SY_EQUAL, SY_ADD_ASSIGN, SY_MINUS_ASSIGN, SY_MOD_ASSIGN,
-                  SY_MUL_ASSIGN, SY_ADD_ASSIGN, SY_OR_ASSIGN, SY_XOR_ASSIGN,
-                  SY_DIV_ASSIGN]
-
 BLOCK_TYPE_STMT = 0x01
 BLOCK_TYPE_FUNCTION = 0x02
 BLOCK_TYPE_CLASS = 0x03
+
+VAR_TYPE_LOCAL = 0x01
+VAR_TYPE_FUNCTION = 0x02
+VAR_TYPE_ARGUMENT = 0x03
+VAR_TYPE_FIELD = 0x04
+VAR_TYPE_METHOD = 0x05
 
 
 class Stmt(AST):
@@ -20,13 +22,14 @@ class Stmt(AST):
 
 
 class Variable(AST):
-    def __init__(self, name, clazz, block):
+    def __init__(self, name, clazz, block, type):
         self.name = name
         self.clazz = clazz
         self.block = block
+        self.type = type
 
     def __repr__(self):
-        return '(Var ' + self.name + ':' + repr(self.clazz) + ')'
+        return '(Var ' + self.name + ':' + repr(self.clazz) + ':' + repr(self.type) + ')'
 
 
 class Block(AST):
@@ -36,8 +39,11 @@ class Block(AST):
         self.vars = {}
         self.type = type
 
-    def add_var(self, name, clazz):
-        self.vars[name] = Variable(name, clazz, self)
+    def add_var(self, name, clazz, type):
+        self.vars[name] = Variable(name, clazz, self, type)
+
+    def add_local_var(self, name, clazz):
+        self.vars[name] = Variable(name, clazz, self, VAR_TYPE_LOCAL)
 
     def contains(self, name):
         return name in self.vars.keys()
@@ -50,40 +56,74 @@ class Block(AST):
         for stmt in self.stmts:
             ret += repr(stmt)
             ret += '\n'
-        ret += '}\n[\n'
+        ret += '} ['
         for var in self.vars.values():
             ret += repr(var)
-            ret += '\n'
-        ret += ']'
+            ret += '\t'
+        ret += ']\n'
         return ret
 
 
-class IF(AST):
-    def __init__(self, expr, stmt, else_stmt=None):
+class Kw_Stmt(AST):
+    def __init__(self, keyword, expr, stmt, block):
+        if stmt is None and block is None:
+            raise SyntaxError('kw stmt has no stmt:' + keyword)
+        self.keyword = keyword
         self.expr = expr
         self.stmt = stmt
-        self.else_stmt = else_stmt
+        self.block = block
 
     def __repr__(self):
-        ret = 'if (' + repr(self.expr) + ') { ' + repr(self.stmt)
-        if self.else_stmt:
-            ret += '} else {' + repr(self.else_stmt)
-        ret += '}'
+        ret = self.keyword
+        if self.expr:
+            ret += ' (' + repr(self.expr) + ') '
+        if self.block:
+            ret += repr(self.block)
+        else:
+            ret += repr(self.stmt)
         return ret
 
 
-class WHILE(AST):
-    def __init__(self, expr, stmt):
-        self.expr = expr
-        self.stmt = stmt
+class WHILE(Kw_Stmt):
+    def __init__(self, expr, stmt, block):
+        Kw_Stmt.__init__(self, 'while', expr, stmt, block)
+
+
+class ELSE(Kw_Stmt):
+    def __init__(self, stmt, block):
+        Kw_Stmt.__init__(self, 'else', None, stmt, block)
+
+
+class IF(Kw_Stmt):
+    def __init__(self, expr, stmt, block, other_stmt=None):
+        Kw_Stmt.__init__(self, 'if', expr, stmt, block)
+        self.other_stmt = other_stmt
 
     def __repr__(self):
-        return 'while (' + repr(self.expr) + ') { ' + repr(self.stmt) + ' }'
+        ret = Kw_Stmt.__repr__(self)
+        if self.other_stmt:
+            ret += repr(self.other_stmt)
+        return ret
 
 
-class DO(WHILE):
+class ELIF(IF):
+    def __init__(self, expr, stmt, block, other_stmt=None):
+        IF.__init__(self, expr, stmt, block, other_stmt)
+        self.keyword = 'elif'
+
+
+class DO(Kw_Stmt):
+    def __init__(self, expr, stmt, block):
+        Kw_Stmt.__init__(self, 'do', expr, stmt, block)
+
     def __repr__(self):
-        return 'do { ' + repr(self.stmt) + ' }' + ' while(' + repr(self.expr) + ')'
+        ret = 'do '
+        if self.block:
+            ret += repr(self.block)
+        else:
+            ret += repr(self.stmt)
+        ret += 'while(' + repr(self.expr) + ')'
+        return ret
 
 
 class Declaration(Stmt):
@@ -122,7 +162,7 @@ class StmtParser(ExprParser):
             self.eat_type()
             name = self.current_token.value
             self.eat_id()
-            block.add_var(name, type)
+            block.add_local_var(name, type)
             if self.current_token.value == SY_ASSIGN:
                 self.eat_sy(SY_ASSIGN)
                 right = self.expr()
@@ -166,34 +206,62 @@ class StmtParser(ExprParser):
     def eat_semi(self):
         self.eat_sy(SY_SEMI)
 
-    def if_stmt(self, block):
+    def if_stmt(self, parent):
         self.eat_kw(KW_IF)
-        self.eat_sy(SY_LPAREN)
-        expr = self.expr()
-        self.eat_sy(SY_RPAREN)
-        stmt = self.stmt(block)
+        expr = self.bool_expr()
+        stmt, block = self.stmt_or_block(parent)
+        if self.current_token.value is KW_ELIF:
+            other_stmt = self.elif_stmt(parent)
+            return IF(expr, stmt, block, other_stmt)
         if self.current_token.value is KW_ELSE:
-            self.eat_kw(KW_ELSE)
-            else_stmt = self.stmt(block)
-            return IF(expr, stmt, else_stmt)
-        return IF(expr, stmt)
+            other_stmt = self.else_stmt(parent)
+            return IF(expr, stmt, block, other_stmt)
+        return IF(expr, stmt, block)
 
-    def do_stmt(self, block):
+    def do_stmt(self, parent):
         self.eat_kw(KW_DO)
-        stmt = self.stmt(block)
+        stmt, block = self.stmt_or_block(parent)
         self.eat_kw(KW_WHILE)
-        self.eat_sy(SY_LPAREN)
-        expr = self.expr()
-        self.eat_sy(SY_RPAREN)
-        return DO(expr, stmt)
+        expr = self.bool_expr()
+        return DO(expr, stmt, block)
 
-    def while_stmt(self, block):
+    def while_stmt(self, parent):
         self.eat_kw(KW_WHILE)
+        expr = self.bool_expr()
+        stmt, block = self.stmt_or_block(parent)
+        return WHILE(expr, stmt, block)
+
+    def elif_stmt(self, parent):
+        self.eat_kw(KW_ELIF)
+        expr = self.bool_expr()
+        stmt, block = self.stmt_or_block(parent)
+        if self.current_token.value is KW_ELIF:
+            other_stmt = self.elif_stmt(parent)
+            return ELIF(expr, stmt, block, other_stmt)
+        if self.current_token.value is KW_ELSE:
+            other_stmt = self.else_stmt(parent)
+            return ELIF(expr, stmt, block, other_stmt)
+        return ELIF(expr, stmt, block)
+
+    def else_stmt(self, parent):
+        self.eat_kw(KW_ELSE)
+        stmt, block = self.stmt_or_block(parent)
+        return ELSE(stmt, block)
+
+    def stmt_or_block(self, parent):
+        block = None
+        stmt = None
+        if self.current_token.value is SY_LBRACE:
+            block = self.block(parent)
+        else:
+            stmt = self.stmt(parent)
+        return stmt, block
+
+    def bool_expr(self):
         self.eat_sy(SY_LPAREN)
         expr = self.expr()
         self.eat_sy(SY_RPAREN)
-        stmt = self.stmt(block)
-        return WHILE(expr, stmt)
+        return expr
 
 
 if __name__ == '__main__':
@@ -204,7 +272,13 @@ if __name__ == '__main__':
     int b = 3;
     float c = 2.6;
     string str = "strre"+"cds";
-    if (2+9/6) str = "dfds";
+    if (2+9/6) {
+        str = "dfds";
+    } elif (52/89*90|45) {
+        str = "dfd";
+    } else {
+        str = "hello";
+    }
     if (3) c = 3.2; else c = 3.6;
     do ++b; while(b > 5)
     while(b >=0) a[4/7] = 68+928;
