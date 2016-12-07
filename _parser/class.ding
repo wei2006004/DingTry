@@ -1,3 +1,19 @@
+class Demo {
+    def function(int a, int b) {
+        a = 10 + 2 / 3 + b;
+        float c = 2.6;
+        string str = "strre"+"cds";
+        while(b >=0) {
+            a = 68+928;
+            --b;
+        }
+    }
+
+    def main() {
+        function(1, 3);
+    }
+}
+
 def function(int a, int b) {
     a = 10 + 2 / 3 + b;
     float c = 2.6;

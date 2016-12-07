@@ -4,6 +4,7 @@ BLOCK_TYPE_STMT = 0x01
 BLOCK_TYPE_FUNCTION = 0x02
 BLOCK_TYPE_CLASS = 0x03
 BLOCK_TYPE_METHOD = 0x04
+BLOCK_TYPE_FILE = 0x05
 
 VAR_TYPE_LOCAL = 0x01
 VAR_TYPE_FUNCTION = 0x02
@@ -56,13 +57,19 @@ class Variable(AST):
 
 
 class Block(AST):
-    def __init__(self, parent, stmts, package, type=BLOCK_TYPE_STMT):
+    def __init__(self, parent, package, type=BLOCK_TYPE_STMT):
         self.parent = parent
-        self.stmts = stmts
+        self.stmts = []
         self.vars = {}
         self.classes = {}
         self.package = package
         self.type = type
+
+    def add_stmt(self, stmt):
+        self.stmts.append(stmt)
+
+    def add_stmts(self, stmts):
+        self.stmts += stmts
 
     def is_function_block(self):
         return self.type is BLOCK_TYPE_FUNCTION
@@ -85,7 +92,7 @@ class Block(AST):
     def add_function(self, name, clazz=KW_MAP[KW_VOID]):
         self.vars[name] = Variable(name, clazz, self, VAR_TYPE_FUNCTION)
 
-    def add_class(self, name, package, type):
+    def add_class(self, name, package, type=ASSESS_TYPE_PACKAGE):
         self.classes[package + '.' + name] = Class(package, name, type)
 
     def get_class_recur(self, name, package):

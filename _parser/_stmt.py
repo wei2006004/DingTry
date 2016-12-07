@@ -89,13 +89,13 @@ class Declaration(Stmt):
 
 class StmtParser(ExprParser):
     def block(self, parent, package, arglist=[]):
-        block = Block(parent, [], package)
+        block = Block(parent, package)
         for type, name in arglist:
             block.add_var(name, type, VAR_TYPE_ARGUMENT)
         self.eat_sy(SY_LBRACE)
         stmts = self.stmts(block)
         self.eat_sy(SY_RBRACE)
-        block.stmts = stmts
+        block.add_stmts(stmts)
         return block
 
     def stmts(self, block):

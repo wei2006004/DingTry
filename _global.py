@@ -139,6 +139,7 @@ for sy in SY_DOUBLE_LIST:
 
 '''关键字定义'''
 KW_DEF = 'def'
+KW_CLASS = 'class'
 KW_VAR = 'var'
 KW_DO = 'do'
 KW_WHILE = 'while'
@@ -162,7 +163,7 @@ KW_VOID = 'void'
 KW_LIST = [KW_DEF, KW_VAR, KW_DO, KW_WHILE, KW_IF, KW_ELIF,
            KW_ELSE, KW_FOR, KW_SWITCH, KW_CASE, KW_RETURN,
            KW_STRING, KW_INT, KW_FLOAT, KW_DOUBLE, KW_BOOL, KW_CHAR,
-           KW_VOID]
+           KW_VOID, KW_CLASS]
 KW_BT_LIST = [KW_STRING, KW_INT, KW_FLOAT, KW_DOUBLE, KW_BOOL, KW_CHAR, KW_VOID]
 KW_STMT_LIST = [KW_DO, KW_WHILE, KW_IF, KW_FOR, KW_SWITCH]
 
