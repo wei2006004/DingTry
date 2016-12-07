@@ -1,0 +1,21 @@
+def function(int a, int b) {
+    a = 10 + 2 / 3 + b;
+    float c = 2.6;
+    string str = "strre"+"cds";
+    if (2+9/6) {
+        str = "dfds";
+    } else {
+        str = "hello";
+    }
+    if (3) c = 3.2; else c = 3.6;
+    do ++b; while(b > 5)
+    while(b >=0) {
+        a = 68+928;
+        --b;
+    }
+}
+
+def main() {
+    function(1, 3);
+}
+

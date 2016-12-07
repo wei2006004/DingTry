@@ -1,15 +1,5 @@
 from _parser._expr import *
 
-BLOCK_TYPE_STMT = 0x01
-BLOCK_TYPE_FUNCTION = 0x02
-BLOCK_TYPE_CLASS = 0x03
-
-VAR_TYPE_LOCAL = 0x01
-VAR_TYPE_FUNCTION = 0x02
-VAR_TYPE_ARGUMENT = 0x03
-VAR_TYPE_FIELD = 0x04
-VAR_TYPE_METHOD = 0x05
-
 
 class Stmt(AST):
     def __init__(self, assignop, left, right):
@@ -19,65 +9,6 @@ class Stmt(AST):
 
     def __repr__(self):
         return repr(self.left) + self.assignop + repr(self.right) + ';'
-
-
-class Variable(AST):
-    def __init__(self, name, clazz, block, type):
-        self.name = name
-        self.clazz = clazz
-        self.block = block
-        self.type = type
-
-    def __repr__(self):
-        return '(Var ' + self.name + ':' + repr(self.clazz) + ':' + repr(self.type) + ')'
-
-
-class Block(AST):
-    def __init__(self, parent, stmts, type=BLOCK_TYPE_STMT):
-        self.parent = parent
-        self.stmts = stmts
-        self.vars = {}
-        self.type = type
-
-    def add_var(self, name, clazz, type):
-        self.vars[name] = Variable(name, clazz, self, type)
-
-    def add_local_var(self, name, clazz):
-        self.vars[name] = Variable(name, clazz, self, VAR_TYPE_LOCAL)
-
-    def recur_contains(self, name):
-        block = self
-        while block is not None:
-            if block.contains(name):
-                return True
-            block = block.parent
-        return False
-
-    def recur_get_var(self, name):
-        block = self
-        while block is not None:
-            if block.contains(name):
-                return block.get_var(name)
-            block = block.parent
-        return None
-
-    def contains(self, name):
-        return name in self.vars.keys()
-
-    def get_var(self, name):
-        return self.vars[name]
-
-    def __repr__(self):
-        ret = '{\n'
-        for stmt in self.stmts:
-            ret += repr(stmt)
-            ret += '\n'
-        ret += '} ['
-        for var in self.vars.values():
-            ret += repr(var)
-            ret += '\t'
-        ret += ']\n'
-        return ret
 
 
 class Kw_Stmt(AST):
@@ -157,8 +88,10 @@ class Declaration(Stmt):
 
 
 class StmtParser(ExprParser):
-    def block(self, parent):
-        block = Block(parent, [])
+    def block(self, parent, package, arglist=[]):
+        block = Block(parent, [], package)
+        for type, name in arglist:
+            block.add_var(name, type, VAR_TYPE_ARGUMENT)
         self.eat_sy(SY_LBRACE)
         stmts = self.stmts(block)
         self.eat_sy(SY_RBRACE)
@@ -173,7 +106,7 @@ class StmtParser(ExprParser):
         return ret
 
     def stmt(self, block):
-        if self.is_type(self.current_token):
+        if self.is_type(self.current_token, block):
             type = self.current_token
             self.eat_type()
             name = self.current_token.value
@@ -209,19 +142,16 @@ class StmtParser(ExprParser):
             return self.while_stmt(block)
         self.error('not support kw: ' + repr(self.current_token))
 
-    def variable(self, block):
-        name = self.current_token.value
-        self.eat_id()
-        var = block.recur_get_var(name)
-        if var is None:
-            self.error('has no var name:' + name)
-        return var
+    def is_type(self, token, block):
+        if token.match_category(CATEGORY_KW_BT):
+            return True
+        return block.get_class_recur(token.value, block.package) is not None
 
-    def is_type(self, token):
-        return token.match_category(CATEGORY_KW_BT)
-
-    def eat_type(self):
-        self.eat_kw(category=CATEGORY_KW_BT)
+    def eat_type(self, is_bt=True):
+        if is_bt:
+            self.eat_kw(category=CATEGORY_KW_BT)
+        else:
+            self.eat_id()
 
     def eat_semi(self):
         self.eat_sy(SY_SEMI)
@@ -272,7 +202,7 @@ class StmtParser(ExprParser):
         block = None
         stmt = None
         if self.current_token.value is SY_LBRACE:
-            block = self.block(parent)
+            block = self.block(parent, parent.package)
         else:
             stmt = self.stmt(parent)
         return stmt, block
@@ -287,27 +217,9 @@ class StmtParser(ExprParser):
 if __name__ == '__main__':
     from _lexer import Lexer
 
-    stmts = ''' {
-    int a = 10 + 2 / 3 ;
-    int b = 3;
-    float c = 2.6;
-    string str = "strre"+"cds";
-    if (2+9/6) {
-        str = "dfds";
-    } elif (52/89*90|45) {
-        str = "dfd";
-    } else {
-        str = "hello";
-    }
-    if (3) c = 3.2; else c = 3.6;
-    do ++b; while(b > 5)
-    while(b >=0) {
-        a = 68+928;
-        --b;
-    }
-    } '''
+    stmts = open('stmt.ding', 'r').read()
     lexer = Lexer(stmts)
     parser = StmtParser(lexer)
-    ret = parser.block(None)
+    ret = parser.block(None, '')
     print(stmts)
     print(ret)

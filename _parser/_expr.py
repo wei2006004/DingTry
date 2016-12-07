@@ -73,6 +73,8 @@ class ExprParser(Parser):
             return expr
         var = self.variable(block)
         if self.current_token.value is SY_LPAREN:
+            if not var.is_function():
+                self.error('var is not function, can not call operate')
             self.eat_sy(SY_LPAREN)
             arglist = []
             while self.current_token.value is not SY_RPAREN:
@@ -130,8 +132,11 @@ class ExprParser(Parser):
         return self.factor(block)
 
     def variable(self, block):
-        var = self.current_token.value
+        name = self.current_token.value
         self.eat_id()
+        var = block.get_var_recur(name)
+        if var is None:
+            self.error('has no var name:' + name)
         return var
 
 

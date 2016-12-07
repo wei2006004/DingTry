@@ -1,0 +1,19 @@
+{
+    int a = 10 + 2 / 3 ;
+    int b = 3;
+    float c = 2.6;
+    string str = "strre"+"cds";
+    if (2+9/6) {
+        str = "dfds";
+    } elif (52/89*90|45) {
+        str = "dfd";
+    } else {
+        str = "hello";
+    }
+    if (3) c = 3.2; else c = 3.6;
+    do ++b; while(b > 5)
+    while(b >=0) {
+        a = 68+928;
+        --b;
+    }
+}
